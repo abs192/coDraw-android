@@ -16,6 +16,13 @@ gen/
 .gradle/
 build/
 
+# Settings file
+.settings/
+
+# URL
+URLStore.java
+URLStore.class
+
 # Local configuration file (sdk path, etc)
 local.properties
 
