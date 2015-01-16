@@ -20,6 +20,7 @@ import com.android.volley.toolbox.Volley;
 import com.github.nkzawa.emitter.Emitter;
 import com.github.nkzawa.socketio.client.Ack;
 import com.github.nkzawa.socketio.client.IO;
+import com.github.nkzawa.socketio.client.IO.Options;
 import com.github.nkzawa.socketio.client.Socket;
 
 public class Radio {
@@ -40,9 +41,9 @@ public class Radio {
 
 	public void get(Context context, String url, Listener<String> rl,
 			ErrorListener el) {
-		
+
 		if (ConnectionUpdateReceiver.checkConnection(context)) {
-		
+
 			RequestQueue queue = Volley.newRequestQueue(context);
 			StringRequest jsObjRequest = new StringRequest(Request.Method.GET,
 					url, rl, el);
@@ -82,14 +83,14 @@ public class Radio {
 				@Override
 				public void call(Object... args) {
 					System.out.println("Connection established");
-					System.out
-							.println("BOOOOOOOOOOOOOM BAEEEEEEEEEEEEEEEEEEEEEE");
 				}
 
 			}).on(Socket.EVENT_DISCONNECT, new Emitter.Listener() {
 
 				@Override
 				public void call(Object... args) {
+
+					System.out.println("Connection disconnected");
 				}
 
 			}).on(Socket.EVENT_ERROR, new Emitter.Listener() {
@@ -121,6 +122,16 @@ public class Radio {
 					}
 				}
 
+			}).on("status", new Emitter.Listener() {
+
+				@Override
+				public void call(Object... args) {
+					JSONObject obj = (JSONObject) args[0];
+					if (obj != null) {
+						dl.onStatus(obj);
+					}
+				}
+
 			});
 			socket.connect();
 
@@ -129,12 +140,14 @@ public class Radio {
 		}
 	}
 
-	public void emitJustClick(int x, int y, int size, int color, char type) {
+	public void emitJustClick(String room, int x, int y, int size, int color,
+			char type) {
 
 		String hexColor = String.format("#%06X", (0xFFFFFF & color));
 		if (socket != null) {
 			JSONObject obj = new JSONObject();
 			try {
+				obj.put("room", room);
 				obj.put("x", x + "");
 				obj.put("y", y + "");
 				obj.put("penSize", size + "");
@@ -151,13 +164,14 @@ public class Radio {
 
 	}
 
-	public void emitDragClick(double x, double y, double X, double Y,
-			double size, int color, char type) {
+	public void emitDragClick(String room, double x, double y, double X,
+			double Y, double size, int color, char type) {
 
 		String hexColor = String.format("#%06X", (0xFFFFFF & color));
 		if (socket != null) {
 			JSONObject obj = new JSONObject();
 			try {
+				obj.put("room", room);
 				obj.put("prevRatioX", x + "");
 				obj.put("prevRatioY", y + "");
 				obj.put("currRatioX", X + "");
@@ -175,5 +189,16 @@ public class Radio {
 			System.out.println("socket null");
 		}
 
+	}
+
+	public void disconnect() {
+		if (socket != null)
+			socket.disconnect();
+	}
+
+	public void emitJoin(JSONObject a) {
+		if (socket != null) {
+			socket.emit("join", a);
+		}
 	}
 }

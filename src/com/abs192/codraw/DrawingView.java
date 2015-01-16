@@ -31,12 +31,17 @@ public class DrawingView extends View {
 	ArrayList<Integer> listX, listY;
 
 	private float strokeWidth = 18f;
+	String room;
 
 	public DrawingView(Context context, AttributeSet attrs) {
 		super(context, attrs);
 		listX = new ArrayList<Integer>();
 		listY = new ArrayList<Integer>();
 		setupDrawing();
+	}
+
+	public void setRoom(String room) {
+		this.room = room;
 	}
 
 	public int getPaintColor() {
@@ -151,8 +156,8 @@ public class DrawingView extends View {
 				if (lX.size() == 1) {
 					int x = lX.get(0);
 					int y = lY.get(0);
-					Radio.getInstance().emitJustClick(x, y, (int) strokeWidth,
-							paintColor, 'p');
+					Radio.getInstance().emitJustClick(room, x, y,
+							(int) strokeWidth, paintColor, 'p');
 
 				} else {
 					if (lX.size() != 0 && lY.size() != 0) {
@@ -172,8 +177,8 @@ public class DrawingView extends View {
 							float cY = Y / height;
 							double s = strokeWidth / (height * width);
 
-							Radio.getInstance().emitDragClick(pX, pY, cX, cY,
-									s, paintColor, 'p');
+							Radio.getInstance().emitDragClick(room, pX, pY, cX,
+									cY, s, paintColor, 'p');
 							// Radio.getInstance().emitJustClick(x, y,
 							// (int) strokeWidth, paintColor, 'p');
 						}

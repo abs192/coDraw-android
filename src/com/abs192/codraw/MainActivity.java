@@ -225,7 +225,9 @@ public class MainActivity extends Activity implements DrawListener {
 
 	@TargetApi(Build.VERSION_CODES.JELLY_BEAN)
 	private void initPaper() {
+
 		dv = (DrawingView) findViewById(R.id.drawing);
+		dv.setRoom(room);
 		config = dv.new DrawConfig(currentColor, 18);
 		dv.setDrawConfig(config);
 		b = (ImageButton) findViewById(R.id.buttonColorPicker);
@@ -468,7 +470,16 @@ public class MainActivity extends Activity implements DrawListener {
 
 	@Override
 	public void onStatus(JSONObject a) {
-
+		System.out.println("Status received: " + a.toString());
+		Radio.getInstance().emitJoin(a);
 	}
 
+	@Override
+	protected void onDestroy() {
+		super.onDestroy();
+		Radio.getInstance().disconnect();
+		new Store(getApplicationContext()).setGameStatus(false);
+		new Store(getApplicationContext()).setPlayer(null);
+		unregisterReceiver(cur);
+	}
 }
