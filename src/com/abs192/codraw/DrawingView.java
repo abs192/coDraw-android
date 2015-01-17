@@ -13,7 +13,18 @@ import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
 
+/**
+ * @author Aditya
+ *
+ */
 public class DrawingView extends View {
+
+	public enum PEN_TYPE {
+		PEN, BRUSH, ERASER, CIRCLE, RECTANGLE
+	};
+
+	PEN_TYPE penType = PEN_TYPE.PEN;
+	int penTypeType;
 
 	// drawing path
 	private Path drawPath;
@@ -33,11 +44,23 @@ public class DrawingView extends View {
 	private float strokeWidth = 18f;
 	String room;
 
+	private boolean isConnected;
+	private float cX;
+	private float cY;
+
 	public DrawingView(Context context, AttributeSet attrs) {
 		super(context, attrs);
 		listX = new ArrayList<Integer>();
 		listY = new ArrayList<Integer>();
 		setupDrawing();
+	}
+
+	public PEN_TYPE getPenType() {
+		return penType;
+	}
+
+	public void setPenType(PEN_TYPE penType) {
+		this.penType = penType;
 	}
 
 	public void setRoom(String room) {
@@ -46,6 +69,12 @@ public class DrawingView extends View {
 
 	public int getPaintColor() {
 		return paintColor;
+	}
+
+	@Override
+	public String toString() {
+		return "DrawingView [penType=" + penType + ", penTypeType="
+				+ penTypeType + "]";
 	}
 
 	public void setDrawConfig(DrawConfig dc) {
@@ -104,6 +133,7 @@ public class DrawingView extends View {
 	}
 
 	public void drawDrag(float px, float py, float cx, float cy, DrawConfig temp) {
+
 		setDrawConfig(temp);
 		Path drawPath2 = new Path();
 		drawPath2.moveTo(px, py);
@@ -111,39 +141,84 @@ public class DrawingView extends View {
 		drawCanvas.drawPath(drawPath2, drawPaint);
 		drawPath2.reset();
 		invalidate();
-
 	}
 
 	@Override
 	public boolean onTouchEvent(MotionEvent event) {
+
 		float touchX = event.getX();
 		float touchY = event.getY();
-		listX.add((int) touchX);
-		listY.add((int) touchY);
-		switch (event.getAction()) {
-		case MotionEvent.ACTION_DOWN:
-			drawPath.moveTo(touchX, touchY);
-			break;
-		case MotionEvent.ACTION_MOVE:
-			drawPath.lineTo(touchX, touchY);
-			if (listX.size() == 50) {
-				sendData(listX, listY);
-				listX.clear();
-				listY.clear();
+		if (isConnected) {
+
+			switch (penType) {
+
+			case PEN: {
+
+				listX.add((int) touchX);
+
+				listY.add((int) touchY);
+
+				switch (event.getAction()) {
+				case MotionEvent.ACTION_DOWN:
+					drawPath.moveTo(touchX, touchY);
+					break;
+				case MotionEvent.ACTION_MOVE:
+					drawPath.lineTo(touchX, touchY);
+					if (listX.size() == 50) {
+						sendData(listX, listY);
+						listX.clear();
+						listY.clear();
+					}
+					break;
+				case MotionEvent.ACTION_UP:
+					drawCanvas.drawPath(drawPath, drawPaint);
+					drawPath.reset();
+					sendData(listX, listY);
+					listX.clear();
+					listY.clear();
+					break;
+				default:
+					return false;
+				}
+				invalidate();
+				return true;
 			}
-			break;
-		case MotionEvent.ACTION_UP:
-			drawCanvas.drawPath(drawPath, drawPaint);
-			drawPath.reset();
-			sendData(listX, listY);
-			listX.clear();
-			listY.clear();
-			break;
-		default:
-			return false;
+
+			case CIRCLE: {
+				switch (event.getAction()) {
+
+				case MotionEvent.ACTION_DOWN:
+					cX = touchX;
+					cY = touchY;
+					System.out
+							.println("circle center " + touchX + "," + touchY);
+					drawPath.moveTo(touchX, touchY);
+					break;
+				case MotionEvent.ACTION_MOVE:
+					System.out.println("circle move " + touchX + "," + touchY);
+					drawPath.reset();
+					drawPath.addCircle(cX, cY, (float) radius(touchX, touchY),
+							Path.Direction.CW);
+					break;
+
+				case MotionEvent.ACTION_UP:
+					drawPath.reset();
+					drawPath.addCircle(cX, cY, (float) radius(touchX, touchY),
+							Path.Direction.CW);
+					break;
+				}
+
+				invalidate();
+				return true;
+			}
+			}
 		}
-		invalidate();
-		return true;
+		return false;
+	}
+
+	private double radius(float touchX, float touchY) {
+		return Math.sqrt((touchX - cX) * (touchX - cX) + (touchY - cY)
+				* (touchY - cY));
 	}
 
 	private void sendData(ArrayList<Integer> listX, ArrayList<Integer> listY) {
@@ -200,6 +275,27 @@ public class DrawingView extends View {
 			this.strokeWidth = f;
 		}
 
+	}
+
+	public static class CircleArea {
+		int radius;
+		int centerX;
+		int centerY;
+
+		CircleArea(int centerX, int centerY, int radius) {
+			this.radius = radius;
+			this.centerX = centerX;
+			this.centerY = centerY;
+		}
+
+		@Override
+		public String toString() {
+			return "Circle[" + centerX + ", " + centerY + ", " + radius + "]";
+		}
+	}
+
+	public void setCoDrawable(boolean isConnected) {
+		this.isConnected = isConnected;
 	}
 
 }

@@ -3,7 +3,7 @@
     android:id="@+id/toast_layout_root"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
-    android:background="#DEEE"
+    android:background="#D111"
     android:orientation="horizontal"
     android:padding="8dp" >
 
@@ -11,6 +11,6 @@
         android:id="@+id/text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textColor="#111" />
+        android:textColor="#EEE" />
 
 </LinearLayout>

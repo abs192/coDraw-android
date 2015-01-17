@@ -23,12 +23,14 @@ import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
 
 import com.abs192.codraw.DrawingView.DrawConfig;
+import com.abs192.codraw.DrawingView.PEN_TYPE;
 import com.abs192.codraw.game.Player;
 import com.abs192.codraw.util.ConnectionUpdateReceiver;
 import com.abs192.codraw.util.Store;
@@ -59,7 +61,8 @@ public class MainActivity extends Activity implements DrawListener {
 
 	private AlertDialog ad;
 	int currentColor = 0xFF33B5E5;
-	ImageButton b;
+	ImageButton b, bPens;
+	LinearLayout toolbar;
 	SeekBar sb;
 	DrawingView dv;
 	DrawConfig config;
@@ -69,14 +72,23 @@ public class MainActivity extends Activity implements DrawListener {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
+
+		dv = (DrawingView) findViewById(R.id.drawing);
+		toolbar = (LinearLayout) findViewById(R.id.toolbar);
+		dv.setVisibility(View.INVISIBLE);
+		toolbar.setVisibility(View.INVISIBLE);
+
 		status = (TextView) findViewById(R.id.textInternet);
 		pg = (ProgressBar) findViewById(R.id.progressBar);
 
 		cur = new ConnectionUpdateReceiver(this);
-		registerReceiver(cur, new IntentFilter(
-				"android.net.conn.CONNECTIVITY_CHANGE"));
+		IntentFilter intfilter = new IntentFilter(
+				"android.net.conn.CONNECTIVITY_CHANGE");
+		intfilter.setPriority(Integer.MAX_VALUE);
+		registerReceiver(cur, intfilter);
 		isInternetConnected = ConnectionUpdateReceiver
 				.checkConnection(getApplicationContext());
+
 		if (!new Store(getApplicationContext()).getGameStatus()
 				|| new Store(getApplicationContext()).getPlayer() == null)
 			showDialog();
@@ -211,8 +223,13 @@ public class MainActivity extends Activity implements DrawListener {
 
 						@Override
 						public void onErrorResponse(VolleyError error) {
+
 							System.out.println("user check error");
 							pg.setVisibility(View.GONE);
+							Utilities.toast(MainActivity.this, "Error joining "
+									+ room);
+							showDialog();
+
 						}
 					});
 
@@ -226,7 +243,9 @@ public class MainActivity extends Activity implements DrawListener {
 	@TargetApi(Build.VERSION_CODES.JELLY_BEAN)
 	private void initPaper() {
 
-		dv = (DrawingView) findViewById(R.id.drawing);
+		dv.setVisibility(View.VISIBLE);
+		toolbar.setVisibility(View.VISIBLE);
+		updateDrawingTouchable(isInternetConnected);
 		dv.setRoom(room);
 		config = dv.new DrawConfig(currentColor, 18);
 		dv.setDrawConfig(config);
@@ -344,6 +363,31 @@ public class MainActivity extends Activity implements DrawListener {
 			}
 		});
 
+		bPens = (ImageButton) findViewById(R.id.buttonPen);
+		bPens.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				setPenType(PEN_TYPE.PEN);
+			}
+		});
+		bPens = (ImageButton) findViewById(R.id.buttonBrush);
+		bPens.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				setPenType(PEN_TYPE.BRUSH);
+			}
+		});
+		bPens = (ImageButton) findViewById(R.id.buttonCircle);
+		bPens.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				setPenType(PEN_TYPE.CIRCLE);
+			}
+		});
+
 		setupMMO();
 	}
 
@@ -432,6 +476,18 @@ public class MainActivity extends Activity implements DrawListener {
 	public void setConnectionUpdate(boolean isConnected) {
 		this.isInternetConnected = isConnected;
 		updateStatusBar(isConnected);
+		updateDrawingTouchable(isConnected);
+	}
+
+	private void updateDrawingTouchable(boolean isConnected) {
+		if (dv != null)
+			dv.setCoDrawable(isConnected);
+	}
+
+	private void setPenType(PEN_TYPE type) {
+		if (dv != null) {
+			dv.setPenType(type);
+		}
 	}
 
 	private void updateStatusBar(boolean b) {

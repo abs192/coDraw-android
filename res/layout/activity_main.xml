@@ -2,37 +2,70 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/profile_cell_back"
+    android:background="#FF000000"
     tools:context="com.abs192.canvastest.MainActivity" >
 
     <com.abs192.codraw.DrawingView
         android:id="@+id/drawing"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/toolbar"
-        android:layout_centerHorizontal="true"
-        android:background="#FF000000" />
+        android:layout_centerInParent="true"
+        android:background="@drawable/profile_cell_back" />
 
     <LinearLayout
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
-        android:background="#aa111111"
-        android:orientation="horizontal"
+        android:background="#EEE"
+        android:orientation="vertical"
         android:padding="10dp" >
 
-        <ImageButton
-            android:id="@+id/buttonColorPicker"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
-            android:background="#3335e5" />
-
-        <SeekBar
-            android:id="@+id/seekBarWidth"
+        <LinearLayout
+            android:id="@+id/toolbarPens"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:max="40" />
+            android:orientation="horizontal" >
+
+            <ImageButton
+                android:id="@+id/buttonPen"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:contentDescription="@string/app_name"
+                android:src="@drawable/t_pencil" />
+
+            <ImageButton
+                android:id="@+id/buttonBrush"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:contentDescription="@string/app_name"
+                android:src="@drawable/t_brush" />
+
+            <ImageButton
+                android:id="@+id/buttonCircle"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:contentDescription="@string/app_name"
+                android:src="@drawable/t_circle" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/toolbarColorWidth"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" >
+
+            <ImageButton
+                android:id="@+id/buttonColorPicker"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:background="#3335e5" />
+
+            <SeekBar
+                android:id="@+id/seekBarWidth"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:max="40" />
+        </LinearLayout>
     </LinearLayout>
 
     <TextView
@@ -55,5 +88,10 @@
         android:layout_centerHorizontal="true"
         android:layout_centerVertical="true"
         android:visibility="gone" />
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent" >
+    </LinearLayout>
 
 </RelativeLayout>
