@@ -1,12 +1,10 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    tools:context="com.abs192.codraw.MainActivity" >
+    xmlns:app="http://schemas.android.com/apk/res-auto" >
 
     <item
-        android:id="@+id/action_settings"
-        android:orderInCategory="100"
-        android:title="@string/action_settings"
-        app:showAsAction="never"/>
+        android:id="@+id/action_chat"
+        android:title="@string/chat"
+        app:actionLayout="@layout/chat_badge"
+        app:showAsAction="ifRoom"/>
 
 </menu>

@@ -6,7 +6,7 @@
         android:fillBefore="true"
         android:fillEnabled="true"
         android:fromYDelta="0"
-        android:toYDelta="+100%p" />
+        android:toYDelta="-100%p" />
 
     <alpha
         android:duration="300"

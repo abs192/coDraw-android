@@ -12,7 +12,7 @@ public interface GameListener {
 
 	public void onStatus(JSONObject obj);
 
-	public void onKilled(JSONObject obj); 
+	public void onKilled(JSONObject obj);
 
 	public void onAllPlayers(JSONObject obj);
 

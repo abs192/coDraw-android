@@ -10,88 +10,81 @@ import java.io.StreamCorruptedException;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.content.SharedPreferences.Editor;
 import android.preference.PreferenceManager;
 import android.widget.Toast;
 
+import com.abs192.codraw.CoDrawApplication;
 import com.abs192.codraw.game.Player;
-
+import com.abs192.codraw.game.State;
 
 public class Store {
 
-	Context context;
-	String ROOT;
-	SharedPreferences sp;
+	static SharedPreferences sp;
 
-	public Store(Context context) {
-		this.context = context;
-		sp = PreferenceManager.getDefaultSharedPreferences(context);
+	static {
+		sp = PreferenceManager
+				.getDefaultSharedPreferences(CoDrawApplication.applicationContext);
 	}
 
-	public void setUsername(String uname) {
-		Editor e = sp.edit();
-		e.putString("uname", uname);
-		e.commit();
+	public static void setUsername(String uname) {
+		sp.edit().putString("uname", uname).commit();
 	}
 
-	public String getUsername() {
+	public static String getUsername() {
 		return sp.getString("uname", "");
 	}
 
-	public String getRoomId() {
+	public static String getRoomId() {
 		return sp.getString("roomID", "");
 	}
 
-	public void setRoomId(String roomId) {
-		Editor e = sp.edit();
-		e.putString("roomID", roomId);
-		e.commit();
+	public static void setRoomId(String roomId) {
+		sp.edit().putString("roomID", roomId).commit();
 	}
 
-	public void setGameStatus(boolean b) {
-		Editor e = sp.edit();
-		e.putBoolean("gamestatus", b);
-		e.commit();
+	public static void setGameStatus(boolean b) {
+		sp.edit().putBoolean("gamestatus", b).commit();
 	}
 
-	public boolean getGameStatus() {
+	public static boolean getGameStatus() {
 		return sp.getBoolean("gamestatus", false);
 	}
 
-	public void setPlayer(Player p) {
-		overwriteObject(context, "player", p);
+	public static void setPlayer(Player p) {
+		overwriteObject("player", p);
 	}
 
-	public Player getPlayer() {
-		return (Player) readObject(context, "player");
+	public static Player getPlayer() {
+		return (Player) readObject("player");
 	}
 
-	private static void overwriteObject(Context context, String name, Object obj) {
+	private static void overwriteObject(String name, Object obj) {
 		try {
-			FileOutputStream fos = context.openFileOutput(name,
-					Context.MODE_PRIVATE);
+			FileOutputStream fos = CoDrawApplication.applicationContext
+					.openFileOutput(name, Context.MODE_PRIVATE);
 			ObjectOutputStream oos = new ObjectOutputStream(fos);
 			oos.writeObject(obj);
 			oos.close();
 		} catch (FileNotFoundException f) {
-			Toast.makeText(context, "File Not Found Exception",
-					Toast.LENGTH_SHORT).show();
+			Toast.makeText(CoDrawApplication.applicationContext,
+					"File Not Found Exception", Toast.LENGTH_SHORT).show();
 			f.printStackTrace();
 
 		} catch (IOException e) {
-			Toast.makeText(context, "IO Exception", Toast.LENGTH_SHORT).show();
+			Toast.makeText(CoDrawApplication.applicationContext,
+					"IO Exception", Toast.LENGTH_SHORT).show();
 			e.printStackTrace();
 		}
 
 	}
 
-	private static Object readObject(Context context, String name) {
+	private static Object readObject(String name) {
 
 		Object obj = null;
 		FileInputStream fis;
 		ObjectInputStream ois;
 		try {
-			fis = context.openFileInput(name);
+			fis = CoDrawApplication.applicationContext.openFileInput(name);
 			ois = new ObjectInputStream(fis);
 			try {
 				obj = ois.readObject();
@@ -111,6 +104,14 @@ public class Store {
 		}
 
 		return obj;
+	}
+
+	public static void setCurrentState(int s) {
+		sp.edit().putInt("state", s).commit();
+	}
+
+	public static int getCurrentState() {
+		return sp.getInt("state", State.NONE);
 	}
 
 }

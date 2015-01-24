@@ -1,541 +1,350 @@
 package com.abs192.codraw;
 
-import java.util.ArrayList;
-
-import org.json.JSONObject;
-
-import android.annotation.TargetApi;
-import android.app.Activity;
 import android.app.AlertDialog;
-import android.content.DialogInterface;
-import android.content.DialogInterface.OnCancelListener;
 import android.content.IntentFilter;
-import android.graphics.Color;
-import android.graphics.PorterDuff.Mode;
-import android.os.Build;
+import android.content.res.Configuration;
 import android.os.Bundle;
-import android.os.Handler;
-import android.view.LayoutInflater;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.ActionBarDrawerToggle;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.view.animation.Animation;
-import android.view.animation.AnimationUtils;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
-import android.widget.ProgressBar;
-import android.widget.SeekBar;
-import android.widget.SeekBar.OnSeekBarChangeListener;
+import android.widget.ListView;
 import android.widget.TextView;
 
-import com.abs192.codraw.DrawingView.DrawConfig;
-import com.abs192.codraw.DrawingView.PEN_TYPE;
-import com.abs192.codraw.game.Player;
-import com.abs192.codraw.util.ConnectionUpdateReceiver;
-import com.abs192.codraw.util.Store;
-import com.abs192.codraw.util.URLStore;
+import com.abs192.codraw.adapters.ChatListAdapter;
+import com.abs192.codraw.game.State;
+import com.abs192.codraw.tools.Circle;
+import com.abs192.codraw.tools.NetworkTool;
+import com.abs192.codraw.tools.Pen;
+import com.abs192.codraw.tools.Tool;
+import com.abs192.codraw.ui.DrawingView;
+import com.abs192.codraw.ui.dialogs.ColorPickerDialog;
+import com.abs192.codraw.ui.dialogs.OnlineOfflineSelect;
+import com.abs192.codraw.ui.dialogs.RoomLogin;
+import com.abs192.codraw.ui.dialogs.StrokeWidthPickerDialog;
+import com.abs192.codraw.util.NetworkStateReceiver;
+import com.abs192.codraw.util.NetworkStateReceiver.NetworkStateReceiverListener;
+import com.abs192.codraw.util.ChatHandler;
+import com.abs192.codraw.util.Radio;
 import com.abs192.codraw.util.Utilities;
-import com.android.volley.Response.ErrorListener;
-import com.android.volley.Response.Listener;
-import com.android.volley.VolleyError;
-import com.larswerkman.holocolorpicker.ColorPicker;
-import com.larswerkman.holocolorpicker.ColorPicker.OnColorChangedListener;
-import com.larswerkman.holocolorpicker.OpacityBar;
-import com.larswerkman.holocolorpicker.OpacityBar.OnOpacityChangedListener;
-import com.larswerkman.holocolorpicker.SVBar;
-import com.larswerkman.holocolorpicker.SaturationBar;
-import com.larswerkman.holocolorpicker.SaturationBar.OnSaturationChangedListener;
-import com.larswerkman.holocolorpicker.ValueBar;
-import com.larswerkman.holocolorpicker.ValueBar.OnValueChangedListener;
 
-public class MainActivity extends Activity implements DrawListener {
+public class MainActivity extends ActionBarActivity implements
+		NetworkStateReceiverListener {
 
-	private ConnectionUpdateReceiver cur;
-	boolean isInternetConnected;
-	TextView status;
-	String uname, room;
-	ProgressBar pg;
-	private Player me;
-	private ArrayList<Player> enemies;
+	private DrawerLayout mDrawerLayout;
+	private ActionBarDrawerToggle mDrawerToggle;
+	private ListView mLeftDrawerView, mRightDrawerView;
 
-	private AlertDialog ad;
-	int currentColor = 0xFF33B5E5;
-	ImageButton b, bPens;
-	LinearLayout toolbar;
-	SeekBar sb;
-	DrawingView dv;
-	DrawConfig config;
-	ArrayList<JSONObject> pointsToDraw;
+	public AlertDialog ad;
+	public String room, uname;
+	private TextView chatCounter; // status;
+	private NetworkStateReceiver networkStateReceiver;
+	private LinearLayout toolbar;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+
 		setContentView(R.layout.activity_main);
 
-		dv = (DrawingView) findViewById(R.id.drawing);
+		CoDrawApplication.drawingView = (DrawingView) findViewById(R.id.drawing);
+		CoDrawApplication.drawingView.setVisibility(View.GONE);
+
 		toolbar = (LinearLayout) findViewById(R.id.toolbar);
-		dv.setVisibility(View.INVISIBLE);
-		toolbar.setVisibility(View.INVISIBLE);
+		// status = (TextView) findViewById(R.id.textInternet);
 
-		status = (TextView) findViewById(R.id.textInternet);
-		pg = (ProgressBar) findViewById(R.id.progressBar);
+		toolbar.setVisibility(View.GONE);
 
-		cur = new ConnectionUpdateReceiver(this);
-		IntentFilter intfilter = new IntentFilter(
-				"android.net.conn.CONNECTIVITY_CHANGE");
-		intfilter.setPriority(Integer.MAX_VALUE);
-		registerReceiver(cur, intfilter);
-		isInternetConnected = ConnectionUpdateReceiver
-				.checkConnection(getApplicationContext());
-
-		if (!new Store(getApplicationContext()).getGameStatus()
-				|| new Store(getApplicationContext()).getPlayer() == null)
-			showDialog();
-		else
-			initPaper();
-
-	}
-
-	public void showDialog() {
-
-		AlertDialog.Builder builder = new AlertDialog.Builder(this);
-		LayoutInflater factory = LayoutInflater.from(this);
-		View e = factory.inflate(R.layout.dialog_room_enter, null);
-		builder.setView(e);
-
-		final EditText etU = (EditText) e.findViewById(R.id.etUser);
-		final EditText etR = (EditText) e.findViewById(R.id.etRoom);
-		String savedName = new Store(this).getUsername();
-		etU.setText(savedName);
-		String savedRoom = new Store(this).getRoomId();
-		etR.setText(savedRoom);
-
-		builder.setOnCancelListener(new OnCancelListener() {
-
-			@Override
-			public void onCancel(DialogInterface dialog) {
-				// ...
-				showDialog();
-			}
-		});
-
-		Button b = (Button) e.findViewById(R.id.buttonCreateRoom);
-		b.setOnClickListener(new OnClickListener() {
-
-			@Override
-			public void onClick(View v) {
-				joinOrCreate(etU, etR, 1);
-			}
-		});
-
-		ad = builder.create();
-		ad.show();
-	}
-
-	protected void joinOrCreate(EditText etU, EditText etR, int i) {
-
-		if (etU != null && etR != null) {
-			room = etR.getText().toString();
-			uname = etU.getText().toString();
-			if (room == null || room.trim().equals("")) {
-				Utilities.toast(this, "Room number field empty");
-				return;
-			}
-			if (uname == null || uname.trim().equals("")) {
-				Utilities.toast(this, "Username field empty");
-				return;
-			}
-			// all clear
-			registerAndPost(uname, room);
-		}
-	}
-
-	private void registerAndPost(final String uname, final String room) {
-
-		// for incorporating direct links to rooms later. separating global and
-		// local values
-
-		if (ConnectionUpdateReceiver.checkConnection(getApplicationContext())) {
-			if (ad != null)
-				ad.dismiss();
-
-			pg.setVisibility(View.VISIBLE);
-			String url = URLStore.USERCHECK_URL + "?username=" + uname
-					+ "&room=" + room;
-			Radio.getInstance().get(getApplicationContext(), url,
-					new Listener<String>() {
-
-						@Override
-						public void onResponse(String response) {
-
-							if (response.equals("1")) {
-
-								Utilities.toast(MainActivity.this,
-										"Joining room...");
-								Radio.getInstance().postRoom(
-										getApplicationContext(),
-										new Listener<String>() {
-
-											@Override
-											public void onResponse(
-													String response) {
-
-												Utilities.toast(
-														MainActivity.this,
-														"Game on!");
-												Store s = new Store(
-														getApplicationContext());
-												s.setRoomId(room);
-												s.setUsername(uname);
-												System.out.println(response);
-												if (pg != null)
-													pg.setVisibility(View.GONE);
-												initPaper();
-											}
-										}, new ErrorListener() {
-
-											@Override
-											public void onErrorResponse(
-													VolleyError error) {
-
-												Utilities.toast(
-														MainActivity.this,
-														"Couldnt join room");
-												System.out.println("error");
-												System.out.println(error
-														.toString());
-												pg.setVisibility(View.GONE);
-												showDialog();
-											}
-										}, uname, room);
-
-							} else {
-
-								pg.setVisibility(View.GONE);
-								Utilities.toast(MainActivity.this,
-										"User with same name already in room "
-												+ room);
-								showDialog();
-							}
-						}
-					}, new ErrorListener() {
-
-						@Override
-						public void onErrorResponse(VolleyError error) {
-
-							System.out.println("user check error");
-							pg.setVisibility(View.GONE);
-							Utilities.toast(MainActivity.this, "Error joining "
-									+ room);
-							showDialog();
-
-						}
-					});
-
-		} else {
-			pg.setVisibility(View.GONE);
-			Utilities.toast(this, "No internet connection");
-		}
-
-	}
-
-	@TargetApi(Build.VERSION_CODES.JELLY_BEAN)
-	private void initPaper() {
-
-		dv.setVisibility(View.VISIBLE);
-		toolbar.setVisibility(View.VISIBLE);
-		updateDrawingTouchable(isInternetConnected);
-		dv.setRoom(room);
-		config = dv.new DrawConfig(currentColor, 18);
-		dv.setDrawConfig(config);
-		b = (ImageButton) findViewById(R.id.buttonColorPicker);
-		sb = (SeekBar) findViewById(R.id.seekBarWidth);
-		b.setBackgroundColor(currentColor);
-		sb.getProgressDrawable().setColorFilter(currentColor, Mode.SRC_IN);
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN)
-			sb.getThumb().setColorFilter(currentColor, Mode.SRC_IN);
-		sb.setProgress((int) dv.getStrokeWidth() - 10);
-
-		// lel
-
-		b.setOnClickListener(new OnClickListener() {
-
-			@Override
-			public void onClick(View v) {
-
-				AlertDialog.Builder builder = new AlertDialog.Builder(
-						MainActivity.this);
-				LayoutInflater factory = LayoutInflater
-						.from(getApplicationContext());
-				View e = factory.inflate(R.layout.color_picker, null);
-
-				ColorPicker picker = (ColorPicker) e.findViewById(R.id.picker);
-				SVBar svBar = (SVBar) e.findViewById(R.id.svbar);
-				OpacityBar opacityBar = (OpacityBar) e
-						.findViewById(R.id.opacitybar);
-				SaturationBar saturationBar = (SaturationBar) e
-						.findViewById(R.id.saturationbar);
-				ValueBar valueBar = (ValueBar) e.findViewById(R.id.valuebar);
-
-				picker.addSVBar(svBar);
-				picker.setColor(currentColor);
-				picker.addOpacityBar(opacityBar);
-				picker.addSaturationBar(saturationBar);
-				picker.addValueBar(valueBar);
-
-				// To get the color
-				picker.getColor();
-
-				// To set the old selected color u can do it like this
-				picker.setOldCenterColor(picker.getColor());
-				// adds listener to the colorpicker which is implemented
-				// in the activity
-				picker.setOnColorChangedListener(new OnColorChangedListener() {
-
-					@Override
-					public void onColorChanged(int color) {
-						currentColor = color;
-
-						b.setBackgroundColor(currentColor);
-						config.color = currentColor;
-						dv.setDrawConfig(config);
-						sb.getProgressDrawable().setColorFilter(currentColor,
-								Mode.SRC_IN);
-						if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN)
-							sb.getThumb().setColorFilter(currentColor,
-									Mode.SRC_IN);
-					}
-				});
-
-				// to turn of showing the old color
-				picker.setShowOldCenterColor(false);
-
-				// adding onChangeListeners to bars
-				opacityBar
-						.setOnOpacityChangedListener(new OnOpacityChangedListener() {
-
-							@Override
-							public void onOpacityChanged(int opacity) {
-							}
-						});
-				valueBar.setOnValueChangedListener(new OnValueChangedListener() {
-
-					@Override
-					public void onValueChanged(int value) {
-
-					}
-				});
-
-				saturationBar
-						.setOnSaturationChangedListener(new OnSaturationChangedListener() {
-
-							@Override
-							public void onSaturationChanged(int saturation) {
-
-							}
-						});
-
-				builder.setView(e);
-				ad = builder.create();
-				ad.show();
-
-			}
-		});
-
-		sb.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {
-
-			@Override
-			public void onStopTrackingTouch(SeekBar seekBar) {
-
-			}
-
-			@Override
-			public void onStartTrackingTouch(SeekBar seekBar) {
-
-			}
-
-			@Override
-			public void onProgressChanged(SeekBar seekBar, int progress,
-					boolean fromUser) {
-				config.strokeWidth = progress + 10;
-				dv.setDrawConfig(config);
-			}
-		});
-
-		bPens = (ImageButton) findViewById(R.id.buttonPen);
-		bPens.setOnClickListener(new OnClickListener() {
-
-			@Override
-			public void onClick(View v) {
-				setPenType(PEN_TYPE.PEN);
-			}
-		});
-		bPens = (ImageButton) findViewById(R.id.buttonBrush);
-		bPens.setOnClickListener(new OnClickListener() {
-
-			@Override
-			public void onClick(View v) {
-				setPenType(PEN_TYPE.BRUSH);
-			}
-		});
-		bPens = (ImageButton) findViewById(R.id.buttonCircle);
-		bPens.setOnClickListener(new OnClickListener() {
-
-			@Override
-			public void onClick(View v) {
-				setPenType(PEN_TYPE.CIRCLE);
-			}
-		});
-
-		setupMMO();
-	}
-
-	private void setupMMO() {
-		Radio.getInstance().connect(this);
-		pointsToDraw = new ArrayList<JSONObject>();
+		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+		getSupportActionBar().setHomeButtonEnabled(true);
 	}
 
 	@Override
-	public void drawClick(final JSONObject a) {
-		// runOnUiThread(new Runnable() {
-		// @Override
-		// public void run() {
-		// System.out.println(a.toString());
-		// try {
-		// String color = a.getString("penColor");
-		// int c = Color.BLACK;
-		// try {
-		// c = Color.parseColor(color);
-		// } catch (Exception e) {
-		// }
-		//
-		// String size = a.getString("penSize").trim();
-		// int s = Integer.parseInt(size);
-		// s += 10;
-		// if (s > 50)
-		// s = 50;
-		//
-		// DrawConfig temp = dv.new DrawConfig(c, s);
-		// String X = a.getString("x").trim();
-		// String Y = a.getString("y").trim();
-		// int x = Integer.parseInt(X);
-		// int y = Integer.parseInt(Y);
-		// dv.drawClick(x, y, temp);
-		// } catch (Exception e) {
-		//
-		// }
-		// dv.setDrawConfig(config);
-		// }
-		// });
-	}
+	protected void onStart() {
+		super.onStart();
 
-	@Override
-	public void drawDrag(final JSONObject a) {
-		runOnUiThread(new Runnable() {
-			@Override
-			public void run() {
-				System.out.println(a.toString());
-				try {
-					String color = a.getString("penColor");
-					int c = Color.BLACK;
-					try {
-						c = Color.parseColor(color);
-					} catch (Exception e) {
+		if (mDrawerLayout == null || mLeftDrawerView == null
+				|| mRightDrawerView == null || mDrawerToggle == null) {
+			// Configure navigation drawer
+			mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+			mLeftDrawerView = (ListView) findViewById(R.id.left_drawer);
+			mRightDrawerView = (ListView) findViewById(R.id.right_drawer);
+			mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout,
+					R.string.drawer_open, R.string.drawer_close) {
+
+				public void onDrawerClosed(View drawerView) {
+					if (drawerView.equals(mLeftDrawerView)) {
+						getSupportActionBar().setTitle(
+								CoDrawApplication.currentStateName);
+						supportInvalidateOptionsMenu();
+						mDrawerToggle.syncState();
 					}
-
-					String size = a.getString("penRatio").trim();
-					double s = Double.parseDouble(size)
-							* (DrawingView.height * DrawingView.width);
-					s += 10;
-					if (s > 50)
-						s = 50;
-
-					DrawConfig temp = dv.new DrawConfig(c, (int) s);
-					String cX = a.getString("currRatioX").trim();
-					String cY = a.getString("currRatioY").trim();
-					String pX = a.getString("prevRatioX").trim();
-					String pY = a.getString("prevRatioY").trim();
-
-					float cx = (Float.parseFloat(cX)) * DrawingView.width;
-					float cy = (Float.parseFloat(cY)) * DrawingView.height;
-					float px = (Float.parseFloat(pX)) * DrawingView.width;
-					float py = (Float.parseFloat(pY)) * DrawingView.height;
-
-					System.out.println(s + ". (" + cX + "," + cY + ") (" + pX
-							+ "," + pY + ")");
-					dv.drawDrag(px, py, cx, cy, temp);
-				} catch (Exception e) {
-
 				}
-				dv.setDrawConfig(config);
-			}
-		});
-	}
 
-	public void setConnectionUpdate(boolean isConnected) {
-		this.isInternetConnected = isConnected;
-		updateStatusBar(isConnected);
-		updateDrawingTouchable(isConnected);
-	}
+				public void onDrawerOpened(View drawerView) {
+					if (drawerView.equals(mLeftDrawerView)) {
+						getSupportActionBar().setTitle(
+								CoDrawApplication.currentStateName);
+						supportInvalidateOptionsMenu();
+						mDrawerToggle.syncState();
+					}
+				}
 
-	private void updateDrawingTouchable(boolean isConnected) {
-		if (dv != null)
-			dv.setCoDrawable(isConnected);
-	}
+				@Override
+				public void onDrawerSlide(View drawerView, float slideOffset) {
+				}
 
-	private void setPenType(PEN_TYPE type) {
-		if (dv != null) {
-			dv.setPenType(type);
+			};
+
+			// mRightDrawerView.set
+			mDrawerLayout.setDrawerListener(mDrawerToggle);
+			mDrawerLayout
+					.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
 		}
+
+		switch (CoDrawApplication.currentState) {
+		case State.NONE:
+			new OnlineOfflineSelect(this).showDialog();
+			break;
+
+		case State.OFFLINE:
+			startDrawing("", "");
+			break;
+
+		case State.JOINING:
+			new RoomLogin(this).showDialog();
+			break;
+
+		case State.JOINED:
+			break;
+		}
+
 	}
 
-	private void updateStatusBar(boolean b) {
-		Animation anim;
+	@Override
+	protected void onPostCreate(Bundle savedInstanceState) {
+		super.onPostCreate(savedInstanceState);
+		mDrawerToggle.syncState();
+	}
+
+	@Override
+	public void onConfigurationChanged(Configuration newConfig) {
+		super.onConfigurationChanged(newConfig);
+		mDrawerToggle.onConfigurationChanged(newConfig);
+	}
+
+	@Override
+	public boolean onPrepareOptionsMenu(Menu menu) {
+
+		MenuItem mItem = menu.findItem(R.id.action_chat);
+
+		if (CoDrawApplication.currentState != State.JOINED) {
+			mItem.setVisible(true);
+			View badgeLayout = null;
+			if (mItem != null)
+				badgeLayout = mItem.getActionView();
+			if (badgeLayout != null) {
+				chatCounter = (TextView) badgeLayout.findViewById(R.id.counter);
+				badgeLayout.setOnClickListener(new OnClickListener() {
+
+					@Override
+					public void onClick(View v) {
+						if (!mDrawerLayout.isDrawerOpen(mRightDrawerView))
+							mDrawerLayout.openDrawer(mRightDrawerView);
+						else
+							mDrawerLayout.closeDrawer(mRightDrawerView);
+
+						if (mDrawerLayout.isDrawerOpen(mLeftDrawerView))
+							mDrawerLayout.closeDrawer(mLeftDrawerView);
+
+					}
+				});
+			}
+			CoDrawApplication.refreshChatCounter(chatCounter);
+		}
+		return super.onPrepareOptionsMenu(menu);
+	}
+
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		MenuInflater inflater = getMenuInflater();
+		inflater.inflate(R.menu.main, menu);
+		return super.onCreateOptionsMenu(menu);
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+		case android.R.id.home:
+			mDrawerToggle.onOptionsItemSelected(item);
+
+			if (mDrawerLayout.isDrawerOpen(mRightDrawerView))
+				mDrawerLayout.closeDrawer(mRightDrawerView);
+
+			return true;
+
+		}
+
+		return super.onOptionsItemSelected(item);
+	}
+
+	public void showDialogOnlineOffline(boolean b) {
 		if (b) {
-			anim = AnimationUtils.loadAnimation(getApplicationContext(),
-					R.anim.navout);
-			anim.setDuration(300);
-			// fade out and hide
-			status.setAnimation(anim);
-			new Handler().postDelayed(new Runnable() {
-
-				@Override
-				public void run() {
-					status.setVisibility(View.GONE);
-				}
-			}, 300);
-
+			// online selected from dialog
+			ad.dismiss();
+			CoDrawApplication.updateCurrentState(State.JOINING);
+			new RoomLogin(this).showDialog();
 		} else {
-
-			anim = AnimationUtils.loadAnimation(getApplicationContext(),
-					R.anim.navin);
-			// fade in and show
-			anim.setDuration(300);
-			status.setAnimation(anim);
-			new Handler().postDelayed(new Runnable() {
-
-				@Override
-				public void run() {
-					status.setVisibility(View.VISIBLE);
-				}
-			}, 300);
+			// offline selected from dialog
+			ad.dismiss();
+			Utilities.toast(this, "Offline mode");
+			CoDrawApplication.updateCurrentState(State.OFFLINE);
+			startDrawing("", "");
 		}
-
 	}
 
 	@Override
-	public void onStatus(JSONObject a) {
-		System.out.println("Status received: " + a.toString());
-		Radio.getInstance().emitJoin(a);
+	protected void onPause() {
+		super.onPause();
+		if (ad != null)
+			ad.dismiss();
 	}
 
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
-		Radio.getInstance().disconnect();
-		new Store(getApplicationContext()).setGameStatus(false);
-		new Store(getApplicationContext()).setPlayer(null);
-		unregisterReceiver(cur);
+		CoDrawApplication.updateCurrentState(State.NONE);
+		if (networkStateReceiver != null)
+			unregisterReceiver(networkStateReceiver);
 	}
+
+	public void cancelRoomLogin() {
+		CoDrawApplication.updateCurrentState(State.NONE);
+		new OnlineOfflineSelect(this).showDialog();
+	}
+
+	public void startDrawing(String uname, String room) {
+		CoDrawApplication.uname = uname;
+		CoDrawApplication.room = room;
+		if (!CoDrawApplication.isOffline())
+			CoDrawApplication.currentStateName = "Room " + room;
+		setTitle(CoDrawApplication.currentStateName);
+		if (ad != null)
+			ad.dismiss();
+		initPaper();
+	}
+
+	private void initPaper() {
+
+		if (CoDrawApplication.isJoined()) {
+			Radio.getInstance().connect(new NetworkTool(this));
+		}
+		new ChatHandler(this);
+		mRightDrawerView.setAdapter(new ChatListAdapter(this));
+
+		CoDrawApplication.drawingView.setVisibility(View.VISIBLE);
+		toolbar.setVisibility(View.VISIBLE);
+		CoDrawApplication.paintAndStroke = CoDrawApplication.drawingView
+				.getPaintAndStroke();
+
+		if (CoDrawApplication.isJoined()) {
+			networkStateReceiver = new NetworkStateReceiver();
+			networkStateReceiver.addListener(this);
+			registerReceiver(networkStateReceiver, new IntentFilter(
+					android.net.ConnectivityManager.CONNECTIVITY_ACTION));
+		}
+
+		ImageButton im = (ImageButton) findViewById(R.id.buttonTool);
+		im.setImageResource(CoDrawApplication.currentTool.getResourceID());
+		im.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+
+				if (CoDrawApplication.currentTool instanceof Pen)
+					CoDrawApplication.currentTool = new Circle();
+				else
+					CoDrawApplication.currentTool = new Pen();
+				((ImageButton) v)
+						.setImageResource(CoDrawApplication.currentTool
+								.getResourceID());
+			}
+		});
+
+		final ImageButton imB = (ImageButton) findViewById(R.id.buttonColor);
+		imB.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				new ColorPickerDialog(MainActivity.this, imB).showDialog();
+			}
+		});
+
+		final Button b = (Button) findViewById(R.id.buttonStrokeWidth);
+		b.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				new StrokeWidthPickerDialog(MainActivity.this, b).showDialog();
+			}
+		});
+
+	}
+
+	private void updateStatusBar(boolean b) {
+		// Animation anim;
+		// if (b) {
+		// anim = AnimationUtils.loadAnimation(getApplicationContext(),
+		// R.anim.navout);
+		// anim.setDuration(300);
+		// // fade out and hide
+		// status.setAnimation(anim);
+		// new Handler().postDelayed(new Runnable() {
+		//
+		// @Override
+		// public void run() {
+		// status.setVisibility(View.GONE);
+		// }
+		// }, 300);
+		//
+		// } else {
+		//
+		// anim = AnimationUtils.loadAnimation(getApplicationContext(),
+		// R.anim.navin);
+		// // fade in and show
+		// anim.setDuration(300);
+		// status.setAnimation(anim);
+		// new Handler().postDelayed(new Runnable() {
+		//
+		// @Override
+		// public void run() {
+		// status.setVisibility(View.VISIBLE);
+		// }
+		// }, 300);
+		// }
+		//
+	}
+
+	public void switchTool(Tool mPreviousTool) {
+
+	}
+
+	@Override
+	public void networkAvailable() {
+		CoDrawApplication.connected = true;
+		updateStatusBar(true);
+	}
+
+	@Override
+	public void networkUnavailable() {
+		CoDrawApplication.connected = false;
+		updateStatusBar(false);
+	}
+
 }

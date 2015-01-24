@@ -1,97 +1,85 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.v4.widget.DrawerLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/drawer_layout"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="#FF000000"
-    tools:context="com.abs192.canvastest.MainActivity" >
+    android:layout_height="match_parent" >
 
-    <com.abs192.codraw.DrawingView
-        android:id="@+id/drawing"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        android:background="@drawable/profile_cell_back" />
+    <ListView
+        android:id="@+id/left_drawer"
+        android:layout_width="280dp"
+        android:layout_height="match_parent"
+        android:layout_gravity="start"
+        android:background="#FFF"
+        android:choiceMode="singleChoice"
+        android:divider="@android:color/transparent"
+        android:dividerHeight="0dp" />
 
-    <LinearLayout
-        android:id="@+id/toolbar"
+    <ListView
+        android:id="@+id/right_drawer"
+        android:layout_width="240dp"
+        android:layout_height="match_parent"
+        android:layout_above="@+id/chat_edittext"
+        android:layout_gravity="end"
+        android:background="#111"
+        android:choiceMode="singleChoice"
+        android:divider="#55dddddd"
+        android:dividerHeight="1dp"
+        android:stackFromBottom="true" />
+
+    <RelativeLayout
+        android:id="@+id/content_frame"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:background="#EEE"
-        android:orientation="vertical"
-        android:padding="10dp" >
+        android:layout_height="match_parent"
+        android:background="#FFF" >
+
+        <com.abs192.codraw.ui.DrawingView
+            android:id="@+id/drawing"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_above="@+id/toolbar"
+            android:layout_centerInParent="true"
+            android:padding="10dp" />
 
         <LinearLayout
-            android:id="@+id/toolbarPens"
+            android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal" >
+            android:layout_alignParentBottom="true"
+            android:background="#111111"
+            android:minHeight="40dp"
+            android:orientation="horizontal"
+            android:padding="10dp"
+            android:weightSum="10" >
 
             <ImageButton
-                android:id="@+id/buttonPen"
+                android:id="@+id/buttonColor"
                 android:layout_width="30dp"
                 android:layout_height="30dp"
-                android:contentDescription="@string/app_name"
-                android:src="@drawable/t_pencil" />
+                android:layout_weight="1"
+                android:background="#33b5e5"
+                android:contentDescription="@string/app_name" />
 
             <ImageButton
-                android:id="@+id/buttonBrush"
+                android:id="@+id/buttonTool"
                 android:layout_width="30dp"
                 android:layout_height="30dp"
-                android:contentDescription="@string/app_name"
-                android:src="@drawable/t_brush" />
+                android:layout_weight="1"
+                android:background="#222"
+                android:contentDescription="@string/app_name" />
 
-            <ImageButton
-                android:id="@+id/buttonCircle"
+            <Button
+                android:id="@+id/buttonStrokeWidth"
                 android:layout_width="30dp"
                 android:layout_height="30dp"
+                android:layout_weight="1"
+                android:background="@drawable/circle"
                 android:contentDescription="@string/app_name"
-                android:src="@drawable/t_circle" />
+                android:scaleX="0.75"
+                android:scaleY="0.75"
+                android:src="#33b5e5"
+                android:text="1"
+                android:textColor="#EEE" />
         </LinearLayout>
+    </RelativeLayout>
 
-        <LinearLayout
-            android:id="@+id/toolbarColorWidth"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" >
-
-            <ImageButton
-                android:id="@+id/buttonColorPicker"
-                android:layout_width="30dp"
-                android:layout_height="30dp"
-                android:background="#3335e5" />
-
-            <SeekBar
-                android:id="@+id/seekBarWidth"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:max="40" />
-        </LinearLayout>
-    </LinearLayout>
-
-    <TextView
-        android:id="@+id/textInternet"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:background="@drawable/backstatus"
-        android:gravity="center"
-        android:padding="7sp"
-        android:text="Lost internet connection"
-        android:textColor="#EEE"
-        android:textSize="24sp"
-        android:visibility="gone" />
-
-    <ProgressBar
-        android:id="@+id/progressBar"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:layout_centerVertical="true"
-        android:visibility="gone" />
-
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="match_parent" >
-    </LinearLayout>
-
-</RelativeLayout>
+</android.support.v4.widget.DrawerLayout>

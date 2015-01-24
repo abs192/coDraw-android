@@ -33,7 +33,6 @@ import android.view.View;
 
 import com.abs192.codraw.R;
 
-
 public class ValueBar extends View {
 
 	/*
@@ -43,13 +42,13 @@ public class ValueBar extends View {
 	private static final String STATE_COLOR = "color";
 	private static final String STATE_VALUE = "value";
 	private static final String STATE_ORIENTATION = "orientation";
-	
+
 	/**
 	 * Constants used to identify orientation.
 	 */
 	private static final boolean ORIENTATION_HORIZONTAL = true;
 	private static final boolean ORIENTATION_VERTICAL = false;
-	
+
 	/**
 	 * Default orientation of the bar.
 	 */
@@ -109,7 +108,7 @@ public class ValueBar extends View {
 	/**
 	 * {@code true} if the user clicked on the pointer to start the move mode. <br>
 	 * {@code false} once the user stops touching the screen.
-	 * 
+	 *
 	 * @see #onTouchEvent(android.view.MotionEvent)
 	 */
 	private boolean mIsMovingPointer;
@@ -144,29 +143,29 @@ public class ValueBar extends View {
 	 * Used to toggle orientation between vertical and horizontal.
 	 */
 	private boolean mOrientation;
-	
-    /**
-     * Interface and listener so that changes in ValueBar are sent
-     * to the host activity/fragment
-     */
-    private OnValueChangedListener onValueChangedListener;
-    
+
+	/**
+	 * Interface and listener so that changes in ValueBar are sent to the host
+	 * activity/fragment
+	 */
+	private OnValueChangedListener onValueChangedListener;
+
 	/**
 	 * Value of the latest entry of the onValueChangedListener.
 	 */
 	private int oldChangedListenerValue;
 
-    public interface OnValueChangedListener {
-        public void onValueChanged(int value);
-    }
+	public interface OnValueChangedListener {
+		public void onValueChanged(int value);
+	}
 
-    public void setOnValueChangedListener(OnValueChangedListener listener) {
-        this.onValueChangedListener = listener;
-    }
+	public void setOnValueChangedListener(OnValueChangedListener listener) {
+		this.onValueChangedListener = listener;
+	}
 
-    public OnValueChangedListener getOnValueChangedListener() {
-        return this.onValueChangedListener;
-    }
+	public OnValueChangedListener getOnValueChangedListener() {
+		return this.onValueChangedListener;
+	}
 
 	public ValueBar(Context context) {
 		super(context);
@@ -201,7 +200,8 @@ public class ValueBar extends View {
 				R.styleable.ColorBars_bar_pointer_halo_radius,
 				b.getDimensionPixelSize(R.dimen.bar_pointer_halo_radius));
 		mOrientation = a.getBoolean(
-				R.styleable.ColorBars_bar_orientation_horizontal, ORIENTATION_DEFAULT);
+				R.styleable.ColorBars_bar_orientation_horizontal,
+				ORIENTATION_DEFAULT);
 
 		a.recycle();
 
@@ -230,8 +230,7 @@ public class ValueBar extends View {
 		int measureSpec;
 		if (mOrientation == ORIENTATION_HORIZONTAL) {
 			measureSpec = widthMeasureSpec;
-		}
-		else {
+		} else {
 			measureSpec = heightMeasureSpec;
 		}
 		int lengthMode = MeasureSpec.getMode(measureSpec);
@@ -240,23 +239,20 @@ public class ValueBar extends View {
 		int length;
 		if (lengthMode == MeasureSpec.EXACTLY) {
 			length = lengthSize;
-		}
-		else if (lengthMode == MeasureSpec.AT_MOST) {
+		} else if (lengthMode == MeasureSpec.AT_MOST) {
 			length = Math.min(intrinsicSize, lengthSize);
-		}
-		else {
+		} else {
 			length = intrinsicSize;
 		}
 
 		int barPointerHaloRadiusx2 = mBarPointerHaloRadius * 2;
 		mBarLength = length - barPointerHaloRadiusx2;
-		if(mOrientation == ORIENTATION_VERTICAL) {
+		if (mOrientation == ORIENTATION_VERTICAL) {
 			setMeasuredDimension(barPointerHaloRadiusx2,
-			        	(mBarLength + barPointerHaloRadiusx2));
-		}
-		else {
+					(mBarLength + barPointerHaloRadiusx2));
+		} else {
 			setMeasuredDimension((mBarLength + barPointerHaloRadiusx2),
-						barPointerHaloRadiusx2);
+					barPointerHaloRadiusx2);
 		}
 	}
 
@@ -274,8 +270,7 @@ public class ValueBar extends View {
 					(mBarPointerHaloRadius - (mBarThickness / 2)),
 					(mBarLength + (mBarPointerHaloRadius)),
 					(mBarPointerHaloRadius + (mBarThickness / 2)));
-		}
-		else {
+		} else {
 			x1 = mBarThickness;
 			y1 = (mBarLength + mBarPointerHaloRadius);
 			mBarLength = h - (mBarPointerHaloRadius * 2);
@@ -287,13 +282,15 @@ public class ValueBar extends View {
 
 		// Update variables that depend of mBarLength.
 		if (!isInEditMode()) {
-			shader = new LinearGradient(mBarPointerHaloRadius, 0,
-					x1, y1,
+			shader = new LinearGradient(
+					mBarPointerHaloRadius,
+					0,
+					x1,
+					y1,
 					new int[] { Color.HSVToColor(0xFF, mHSVColor), Color.BLACK },
 					null, Shader.TileMode.CLAMP);
 		} else {
-			shader = new LinearGradient(mBarPointerHaloRadius, 0,
-					x1, y1,
+			shader = new LinearGradient(mBarPointerHaloRadius, 0, x1, y1,
 					new int[] { 0xff81ff00, Color.BLACK }, null,
 					Shader.TileMode.CLAMP);
 			Color.colorToHSV(0xff81ff00, mHSVColor);
@@ -325,12 +322,11 @@ public class ValueBar extends View {
 		if (mOrientation == ORIENTATION_HORIZONTAL) {
 			cX = mBarPointerPosition;
 			cY = mBarPointerHaloRadius;
-		}
-		else {
+		} else {
 			cX = mBarPointerHaloRadius;
 			cY = mBarPointerPosition;
 		}
-		
+
 		// Draw the pointer halo.
 		canvas.drawCircle(cX, cY, mBarPointerHaloRadius, mBarPointerHaloPaint);
 		// Draw the pointer.
@@ -345,14 +341,13 @@ public class ValueBar extends View {
 		float dimen;
 		if (mOrientation == ORIENTATION_HORIZONTAL) {
 			dimen = event.getX();
-		}
-		else {
+		} else {
 			dimen = event.getY();
 		}
 
 		switch (event.getAction()) {
 		case MotionEvent.ACTION_DOWN:
-		    	mIsMovingPointer = true;
+			mIsMovingPointer = true;
 			// Check whether the user pressed on (or near) the pointer
 			if (dimen >= (mBarPointerHaloRadius)
 					&& dimen <= (mBarPointerHaloRadius + mBarLength)) {
@@ -395,9 +390,10 @@ public class ValueBar extends View {
 					invalidate();
 				}
 			}
-			if(onValueChangedListener != null && oldChangedListenerValue != mColor){
-	            onValueChangedListener.onValueChanged(mColor);
-	            oldChangedListenerValue = mColor;
+			if (onValueChangedListener != null
+					&& oldChangedListenerValue != mColor) {
+				onValueChangedListener.onValueChanged(mColor);
+				oldChangedListenerValue = mColor;
 			}
 			break;
 		case MotionEvent.ACTION_UP:
@@ -411,30 +407,28 @@ public class ValueBar extends View {
 	 * Set the bar color. <br>
 	 * <br>
 	 * Its discouraged to use this method.
-	 * 
+	 *
 	 * @param color
 	 */
 	public void setColor(int color) {
 		int x1, y1;
-		if(mOrientation == ORIENTATION_HORIZONTAL) {
+		if (mOrientation == ORIENTATION_HORIZONTAL) {
 			x1 = (mBarLength + mBarPointerHaloRadius);
 			y1 = mBarThickness;
-		}
-		else {
+		} else {
 			x1 = mBarThickness;
 			y1 = (mBarLength + mBarPointerHaloRadius);
 		}
-		
+
 		Color.colorToHSV(color, mHSVColor);
-		shader = new LinearGradient(mBarPointerHaloRadius, 0,
-				x1, y1, new int[] {
-						color, Color.BLACK }, null, Shader.TileMode.CLAMP);
+		shader = new LinearGradient(mBarPointerHaloRadius, 0, x1, y1,
+				new int[] { color, Color.BLACK }, null, Shader.TileMode.CLAMP);
 		mBarPaint.setShader(shader);
 		calculateColor(mBarPointerPosition);
 		mBarPointerPaint.setColor(mColor);
 		if (mPicker != null) {
 			mPicker.setNewCenterColor(mColor);
-			if(mPicker.hasOpacityBar())
+			if (mPicker.hasOpacityBar())
 				mPicker.changeOpacityBarColor(mColor);
 		}
 		invalidate();
@@ -442,7 +436,7 @@ public class ValueBar extends View {
 
 	/**
 	 * Set the pointer on the bar. With the opacity value.
-	 * 
+	 *
 	 * @param value
 	 *            float between 0 > 1
 	 */
@@ -458,28 +452,27 @@ public class ValueBar extends View {
 		}
 		invalidate();
 	}
-    
-        /**
-         * Calculate the color selected by the pointer on the bar.
-         * 
-         * @param coord
-         *            Coordinate of the pointer.
-         */
+
+	/**
+	 * Calculate the color selected by the pointer on the bar.
+	 *
+	 * @param coord
+	 *            Coordinate of the pointer.
+	 */
 	private void calculateColor(int coord) {
-	    coord = coord - mBarPointerHaloRadius;
-	    if (coord < 0) {
-	    	coord = 0;
-	    } else if (coord > mBarLength) {
-	    	coord = mBarLength;
-	    }
-	    mColor = Color.HSVToColor(new float[] { mHSVColor[0],
-		    				    mHSVColor[1],
-		    				    (float) (1 - (mPosToSatFactor * coord)) });
-    }
+		coord = coord - mBarPointerHaloRadius;
+		if (coord < 0) {
+			coord = 0;
+		} else if (coord > mBarLength) {
+			coord = mBarLength;
+		}
+		mColor = Color.HSVToColor(new float[] { mHSVColor[0], mHSVColor[1],
+				1 - (mPosToSatFactor * coord) });
+	}
 
 	/**
 	 * Get the currently selected color.
-	 * 
+	 *
 	 * @return The ARGB value of the currently selected color.
 	 */
 	public int getColor() {
@@ -491,7 +484,7 @@ public class ValueBar extends View {
 	 * <br>
 	 * WARNING: Don't change the color picker. it is done already when the bar
 	 * is added to the ColorPicker
-	 * 
+	 *
 	 * @see ColorPicker#addSVBar(SVBar)
 	 * @param picker
 	 */

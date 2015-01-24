@@ -109,7 +109,7 @@ public class SVBar extends View {
 	/**
 	 * {@code true} if the user clicked on the pointer to start the move mode. <br>
 	 * {@code false} once the user stops touching the screen.
-	 * 
+	 *
 	 * @see #onTouchEvent(android.view.MotionEvent)
 	 */
 	private boolean mIsMovingPointer;
@@ -376,7 +376,7 @@ public class SVBar extends View {
 
 	/**
 	 * Set the pointer on the bar. With the saturation value.
-	 * 
+	 *
 	 * @param saturation
 	 *            float between 0 > 1
 	 */
@@ -396,7 +396,7 @@ public class SVBar extends View {
 
 	/**
 	 * Set the pointer on the bar. With the Value value.
-	 * 
+	 *
 	 * @param value
 	 *            float between 0 > 1
 	 */
@@ -418,7 +418,7 @@ public class SVBar extends View {
 	 * Set the bar color. <br>
 	 * <br>
 	 * Its discouraged to use this method.
-	 * 
+	 *
 	 * @param color
 	 */
 	public void setColor(int color) {
@@ -448,7 +448,7 @@ public class SVBar extends View {
 
 	/**
 	 * Calculate the color selected by the pointer on the bar.
-	 * 
+	 *
 	 * @param coord
 	 *            Coordinate of the pointer.
 	 */
@@ -471,7 +471,7 @@ public class SVBar extends View {
 
 	/**
 	 * Get the currently selected color.
-	 * 
+	 *
 	 * @return The ARGB value of the currently selected color.
 	 */
 	public int getColor() {
@@ -483,7 +483,7 @@ public class SVBar extends View {
 	 * <br>
 	 * WARNING: Don't change the color picker. it is done already when the bar
 	 * is added to the ColorPicker
-	 * 
+	 *
 	 * @see ColorPicker#addSVBar(com.larswerkman.holocolorpicker.SVBar)
 	 * @param picker
 	 */
